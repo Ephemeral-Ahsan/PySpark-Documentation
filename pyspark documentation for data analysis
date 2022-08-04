@@ -18,5 +18,111 @@ df_pyspark = spark.read.option('header','true').csv('/FileStore/tables/BD_Cricke
 df_pyspark = spark.read.csv('/FileStore/tables/BD_Cricket_Team_match_results_ODI-1.csv',header= True, inferSchema=True) 
 
 type(df_pyspark)
+
 display(df_pyspark)         -- to show the data in table
+
 df_pyspark.printSchema()    -- similar to df.info()
+
+display(df_pyspark.select('Team 1'))  or  display(df_pyspark[['Team 1']])   -- df[['column']]
+
+df_pyspark.dtypes
+
+display(df_pyspark.describe())  -- summary statistics
+
+## adding columns and dropping columns
+
+df_pyspark=df_pyspark.withColumn('new column',df_pyspark['existing column'] + 'something')
+
+### Drop the columns
+
+df_pyspark=df_pyspark.drop('Experience After 2 year')
+
+### Rename the columns
+
+df_pyspark.withColumnRenamed('Name','New Name').show()
+
+## Drop NA from column
+df_pyspark.na.drop().show()
+
+### any==how
+df_pyspark.na.drop(how="any").show()
+
+##threshold
+df_pyspark.na.drop(how="any",thresh=3).show()
+
+##Subset
+df_pyspark.na.drop(how="any",subset=['Age']).show()
+
+### Filling the Missing Value
+df_pyspark.na.fill('Missing Values',['Experience','age']).show()
+
+## Imputing in PySpark
+
+from pyspark.ml.feature import Imputer
+
+imputer = Imputer(
+    inputCols=['age', 'Experience', 'Salary'], 
+    outputCols=["{}_imputed".format(c) for c in ['age', 'Experience', 'Salary']]
+    ).setStrategy("median")
+
+# Add imputation cols to df
+imputer.fit(df_pyspark).transform(df_pyspark).show()
+
+### Filter
+## Salary of the people less than or equal to 20000
+df_pyspark.filter("Salary<=20000").show()
+
+df_pyspark.filter("Salary<=20000").select(['Name','age']).show()
+
+df_pyspark.filter(df_pyspark['Salary']<=20000).show()
+
+df_pyspark.filter((df_pyspark['Salary']<=20000) & (df_pyspark['Salary']>=15000)).show()
+                  
+df_pyspark.filter(~(df_pyspark['Salary']<=20000)).show()
+
+## Groupby
+### Grouped to find the maximum salary
+df_pyspark.groupBy('Name').sum().show()
+
+df_pyspark.groupBy('Name').avg().show()
+
+### Groupby Departmernts  which gives maximum salary
+df_pyspark.groupBy('Departments').sum().show()
+
+df_pyspark.agg({'Salary':'sum'}).show()
+
+## Examples Of Pyspark ML
+
+--- how pyspark consider independent features :-- [Age,Experience]----> new feature--->independent feature
+
+from pyspark.ml.feature import VectorAssembler
+
+featureassembler=VectorAssembler(inputCols=["age","Experience"],outputCol="Independent Features")
+output=featureassembler.transform(training)
+finalized_data=output.select("Independent Features","Salary")
+
+from pyspark.ml.regression import LinearRegression
+##train test split
+train_data,test_data=finalized_data.randomSplit([0.75,0.25])
+regressor=LinearRegression(featuresCol='Independent Features', labelCol='Salary')
+regressor=regressor.fit(train_data)
+
+### Coefficients
+regressor.coefficients
+
+### Intercepts
+regressor.intercept
+
+### Prediction
+pred_results=regressor.evaluate(test_data)
+pred_results.predictions.show()
+pred_results.meanAbsoluteError,pred_results.meanSquaredError
+
+
+
+
+
+
+
+
+
