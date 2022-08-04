@@ -1,0 +1,22 @@
+## PySpark Documentation which are related to Python
+
+-- installation/import
+
+!pip install pyspark
+import pyspark
+
+-- session create
+
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName('Practise').getOrCreate()
+
+-- read data
+
+df_pysaprk = spark.read.option('header','true').csv('/FileStore/tables/BD_Cricket_Team_match_results_ODI-1.csv',inferSchema=True)  
+  (inferSchema helps to correctly identify the column type otherwise it will show string for every single column) 
+-- or, 
+df_pysaprk = spark.read.csv('/FileStore/tables/BD_Cricket_Team_match_results_ODI-1.csv',header= True, inferSchema=True) 
+
+type(df_pysaprk)
+display(df_pysaprk)         -- to show the data in table
+df_pysaprk.printSchema()    -- similar to df.info()
