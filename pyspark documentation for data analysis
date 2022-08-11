@@ -29,6 +29,11 @@ df_pyspark.dtypes
 
 display(df_pyspark.describe())  -- summary statistics
 
+## missing value count in dataframe
+
+from pyspark.sql.functions import isnan, when, count, col
+df.select([count(when(col(c).isNull(), c)).alias(c) for c in df.columns]).show()
+
 ## adding columns and dropping columns
 
 df_pyspark=df_pyspark.withColumn('new column',df_pyspark['existing column'] + 'something')
